@@ -1,3 +1,2 @@
-#!/usr/bin/env python
-
-print('Hello deploy!')
+if __name__ == '__main__':
+    print('Hello deploy!')

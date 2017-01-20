@@ -10,5 +10,11 @@ setup(name='scripts',
       packages=['scripts'],
       install_requires=[
           'Fabric3'
-      ]
-      zip_safe=False)
+      ],
+      zip_safe=False,
+      entry_points={
+          'console_scripts': [
+              'deploy:bin.deploy:main'
+          ]
+      }
+)
