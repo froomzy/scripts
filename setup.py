@@ -14,7 +14,7 @@ setup(name='scripts',
       zip_safe=False,
       entry_points={
           'console_scripts': [
-              'deploy:bin.deploy:main'
+              'deploy=scripts.bin.deploy:main'
           ]
       }
 )
