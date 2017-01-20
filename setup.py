@@ -9,7 +9,9 @@ setup(name='scripts',
       license='MIT',
       packages=['scripts'],
       install_requires=[
-          'Fabric3'
+          'Fabric3',
+          'PyYAML',
+          'petname',
       ],
       zip_safe=False,
       entry_points={

@@ -31,8 +31,7 @@ def get_hosts():
 	return hosts
 
 
-def set_role_defs(user):
-	hosts = get_hosts()
+def set_role_defs(user, hosts):
 	role_defs = {
 		'root': set_hosts('root', hosts),
 		'www': set_hosts(user, hosts)
@@ -52,7 +51,6 @@ def clone_repository(repository, deployment_dir):
 
 @task
 def deploy(project, repository):
-	user = get_user()
 	deployment_dir = '{root}/{project}/{dir}'.format(root=root_deploy_dir, project=project, dir=petname.Generate(words=3, separator='-'))
 	set_role_defs(user=user)
 	print('Beginning a new deployment...')
@@ -77,6 +75,11 @@ def deploy(project, repository):
 	print('Step Five: Complete...')
 
 	print('Deployment completed...')
+
+@task
+def test_task(config):
+	print('Hello World')
+	set_role_defs(user=config['user'], hosts=config['hosts'])
 
 
 
