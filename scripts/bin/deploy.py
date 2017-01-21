@@ -5,6 +5,7 @@ import yaml
 from fabric.api import execute
 
 from ..deploy import test_task
+import version
 
 def parse_arguments():
 	parser = argparse.ArgumentParser(prog='deploy', description="Deploy a project to remote servers")
@@ -14,6 +15,8 @@ def parse_arguments():
 		description='These values will be ignored if a config file is provided.'
 	)
 	deploy_type_group = parser.add_mutually_exclusive_group()
+	parser.add_argument('-v', '--version', help='Version details', action='store_true')
+	parser.add_argument('-e', '--environment', help='Which environment to deploy to')
 	
 	config_group.add_argument('-c', '--config', help='The name of a config file for the deploy')
 
@@ -21,7 +24,6 @@ def parse_arguments():
 	parameters_group.add_argument('-i', '--ips', help='List of IPs for the servers', nargs='*', metavar='IP')
 	parameters_group.add_argument('-p', '--project', help='The name of the project being deployed')
 	parameters_group.add_argument('-r', '--repo', help='The url of the repo containing the code')
-	parameters_group.add_argument('-e', '--environemt', help='Which environment to deploy to')
 
 	deploy_type_group.add_argument('-D', '--deploy', help='Preform an incremental deployment (default)', action='store_true')
 	deploy_type_group.add_argument('-I', '--initial', help='Preform an initial deployment', action='store_true')
@@ -30,20 +32,30 @@ def parse_arguments():
 	return parser.parse_args()
 	
 
-def process_config_file(filename):
+def process_config_file(filename, environment):
 	with open(filename) as config_file:
 		data = yaml.load(config_file)
-		return data
+	print(data)
+	config = data['environments'][environment]
+	config.update(data['project'])
+	return config
 
 def process_args(args):
 	# Take each value from args and put into a dictionary. Sensible defaults
 	pass
 
 
+def print_version_details():
+	print('Deploy scripts version {version}'.format(version=version.__version__))
+
+
 def main():
 	args = parse_arguments()
+	if args.version:
+		print_version_details()
+		return
 	if args.config:
-		config = process_config_file(filename=args.config)
+		config = process_config_file(filename=args.config, environment=args.environment)
 	else:
 		config = process_args(args=args)
 
