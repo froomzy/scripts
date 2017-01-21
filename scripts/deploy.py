@@ -39,6 +39,7 @@ def set_role_defs(user, hosts):
 	}
 	env.roledefs = role_defs
 
+
 def make_deployment_dir(deployment_dir):
 	run('mkdir -p {dir}'.format(dir=deployment_dir))
 
@@ -47,13 +48,21 @@ def clone_repository(repository, deployment_dir):
 	with cd(deployment_dir):
 		run('git clone {} .'.format(repository), pty=False)
 
+
 def pull_repository(repository, deployment_dir):
 	with cd(deployment_dir):
 		run('git clone {} .'.format(repository), pty=False)
 
+
+def get_existing_directory(project):
+	project_dir = '{root}/{project}'.format(root=root_deploy_dir, project=project)
+	with cd(project_dir):
+		return run("ls -td -- */ | head -n 1 ")
+	
+
 def deploy(config, hosts):
-	print(config)
 	try:
+		dir = execute(get_existing_directory, project=config['name'], hosts=hosts['user_hosts'])
 		deployment_dir = '{root}/{project}/{dir}'.format(
 			root=root_deploy_dir, 
 			project=config['name'], 
@@ -91,7 +100,7 @@ def ll():
 def test_task(config, hosts):
 	try:
 		print('Hello World')
-		execute(ll, hosts=hosts['user_hosts'])
+		execute(get_existing_directory, config['name'], hosts=hosts['user_hosts'])
 	finally:
 		disconnect_all()
 

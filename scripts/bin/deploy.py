@@ -75,4 +75,6 @@ def main():
 		'root_hosts': set_hosts(user='root', hosts=config['hosts']),
 	}
 	# TODO (Dylan): Actually do something with the config that is loaded
-	deploy(config=config, hosts=hosts)
+	test_task(config=config, hosts=hosts)
+	
+	# deploy(config=config, hosts=hosts)
