@@ -4,7 +4,7 @@ import argparse
 import yaml
 from fabric.api import execute
 
-from ..deploy import test_task
+from ..deploy import test_task, deploy
 import version
 
 def parse_arguments():
@@ -49,6 +49,18 @@ def print_version_details():
 	print('Deploy scripts version {version}'.format(version=version.__version__))
 
 
+def set_hosts(user, hosts):
+	return ['{user}@{ip}'.format(user=user, ip=ip) for ip in hosts]
+
+
+def set_role_defs(user, hosts):
+	role_defs = {
+		'root': set_hosts('root', hosts),
+		'www': set_hosts(user, hosts)
+	}
+	env.roledefs = role_defs
+
+
 def main():
 	args = parse_arguments()
 	if args.version:
@@ -58,6 +70,9 @@ def main():
 		config = process_config_file(filename=args.config, environment=args.environment)
 	else:
 		config = process_args(args=args)
-
+	hosts = {
+		'user_hosts': set_hosts(user=config['user'], hosts=config['hosts']),
+		'root_hosts': set_hosts(user='root', hosts=config['hosts']),
+	}
 	# TODO (Dylan): Actually do something with the config that is loaded
-	execute(test_task, config=config)
+	deploy(config=config, hosts=hosts)
