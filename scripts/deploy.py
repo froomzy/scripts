@@ -66,7 +66,7 @@ def deploy(config, hosts):
 		deployment_dir = '{root}/{project}/{dir}'.format(
 			root=root_deploy_dir, 
 			project=config['name'], 
-			dir=petname.Generate(words=3, separator='-')
+			dir=dir
 		)
 		print('Beginning a new deployment...')
 		print('Step One: Create a new folder to deploy into...')
