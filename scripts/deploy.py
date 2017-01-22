@@ -2,9 +2,14 @@ from fabric.api import *
 from fabric.network import disconnect_all
 import petname
 from contextlib import contextmanager as _contextmanager
+from collections import namedtuple
+
 
 root_deploy_dir = '~/deployments'
 deployment_dir = ''
+
+
+DeploymentStatus = namedtuple('DeploymentStatus')
 
 @_contextmanager
 def virtualenv():
@@ -58,6 +63,10 @@ def get_existing_directory(project):
 	project_dir = '{root}/{project}'.format(root=root_deploy_dir, project=project)
 	with cd(project_dir):
 		return run("ls -td -- */ | head -n 1 ")
+
+
+def print_status(status):
+	pass
 	
 
 def deploy(config, hosts):
