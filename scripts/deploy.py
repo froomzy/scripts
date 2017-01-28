@@ -9,7 +9,46 @@ root_deploy_dir = '~/deployments'
 deployment_dir = ''
 
 
-DeploymentStatus = namedtuple('DeploymentStatus')
+InitialDeploymentStatus = namedtuple(
+	'InitialDeploymentStatus',
+	field_names=[
+		'create_directory',
+		'clone_code',
+		'create_venv',
+		'migrate',
+		'static',
+		'config_nginx'
+		'reload'
+	]
+)
+
+
+DeploymentStatus = namedtuple(
+	'DeploymentStatus', 
+	field_names=[
+		'pull_code',
+		'update_venv',
+		'migrate',
+		'static',
+		'reload'
+	]
+)
+
+
+ReDeploymentStatus = namedtuple(
+	'ReDeploymentStatus',
+	field_names=[
+		'create_directory',
+		'clone_code',
+		'create_venv',
+		'migrate',
+		'static',
+		'config_nginx'
+		'reload',
+		'clear_old'
+	]
+)
+
 
 @_contextmanager
 def virtualenv():
