@@ -6,18 +6,21 @@ from collections import namedtuple
 
 
 root_deploy_dir = '~/deployments'
+root_site_dir = '~/sites'
+root_log_dir = '~/logs'
 deployment_dir = ''
 
 
 InitialDeploymentStatus = namedtuple(
 	'InitialDeploymentStatus',
 	field_names=[
-		'create_directory',
+		'create_directories',
 		'clone_code',
 		'create_venv',
 		'migrate',
 		'static',
-		'config_nginx'
+		'config_gunicorn',
+		'config_nginx',
 		'reload'
 	]
 )
@@ -51,41 +54,60 @@ ReDeploymentStatus = namedtuple(
 
 
 @_contextmanager
-def virtualenv():
-	with cd(env.env_directory):
-		with prefix(env.env_activate):	
-			yield		
+def virtualenv(directory):
+	activate = 'source {dir}/.venv/bin/activate'.format(dir=directory)
+	with prefix(activate):
+		yield		
 
 
-def set_hosts(user, hosts):
-	return ['{user}@{ip}'.format(user=user, ip=ip) for ip in hosts]
-
-
-def get_user():
-	return input('Enter host user: ')
-
-
-def get_hosts():
-	hosts = []
-	while True:
-		host = input('Enter host IP (f to finish): ')
-		if host.upper() == 'F':
-			break
-		else:
-			hosts.append(host)
-	return hosts
-
-
-def set_role_defs(user, hosts):
-	role_defs = {
-		'root': set_hosts('root', hosts),
-		'www': set_hosts(user, hosts)
-	}
-	env.roledefs = role_defs
-
-
-def make_deployment_dir(deployment_dir):
+def create_directories(deployment_dir, site_dir):
 	run('mkdir -p {dir}'.format(dir=deployment_dir))
+	run('mkdir -p {dir}'.format(dir=site_dir))
+	run('mkdir -p {dir}'.format(dir=log_dir))
+
+def create_virtualenv(deployment_dir):
+	with cd(deployment_dir):
+		run('virtualenv -p python3 env')
+		with virtualenv(deployment_dir):
+			run('pip install -r requirements.txt')
+
+
+def migrate_database(deployment_dir, environment):
+	with cd(deployment_dir):
+		with virtualenv(deployment_dir):
+			run('python manage.py migrate --no-input --settings=__config.settings.{}'.format(environment))
+
+
+def collect_static(deployment_dir, environment):
+	with cd(deployment_dir):
+		with virtualenv(deployment_dir):
+			run('python manage.py collectstatic --no-input --settings=__config.settings.{}'.format(environment))
+
+def create_symlink(deployment_dir, site_dir, project):
+	with cd(site_dir):
+		run('ln -sfn {deployment} {project}'.format(deployment=deployment_dir), project={project})
+
+
+def create_project_gunicorn_startup(sites_dir, project, conf_file):	
+	path = '/etc/systemd/system/{project}-gunicorn.service'.format(project=project)	
+	with cd (sites_dir):
+		run('ln -')
+	sudo('touch {path}'.format(path=path))
+	sudo ('>| {path}'.format(path=path))
+	sudo("echo '{conf_file}' >> {path}".format(conf_file=conf_file, path=path))
+	sudo('systemctl start {project}-gunicorn.service'.format(project=project))
+	sudo('systemctl daemon-reload')
+
+
+def create_project_nginx_conf(project, conf_file):
+	path = '/etc/nginx/sites-available/{project}'.format(project=project)
+	sudo('touch {path}'.format(path=path))
+	sudo ('>| {path}'.format(path=path))
+	sudo("echo '{conf_file}' >> {path}".format(conf_file=conf_file, path=path))
+	sudo('ln -f -s {path} /etc/nginx/sites-enabled'.format(path=path))
+	sudo('nginx -t')
+	sudo('systemctl restart nginx')
+	sudo("ufw allow 'Nginx Full'")
 
 
 def clone_repository(repository, deployment_dir):
@@ -106,6 +128,14 @@ def get_existing_directory(project):
 
 def print_status(status):
 	pass
+
+
+def gunicorn_conf_file(user, project, site_dir):
+	pass
+
+
+def nginx_conf_file(user, project, site_dir, domain):
+	pass
 	
 
 def deploy(config, hosts):
@@ -116,9 +146,14 @@ def deploy(config, hosts):
 			project=config['name'], 
 			dir=dir
 		)
+		log_dir = '{log}/{project}'.format(
+			log=root_log_dir, 
+			project=config['name']
+		)
+		site_dir = root_site_dir
 		print('Beginning a new deployment...')
 		print('Step One: Create a new folder to deploy into...')
-		execute(make_deployment_dir, deployment_dir, hosts=hosts['user_hosts'])
+		execute(create_directories, deployment_dir, site_dir, log_dir, hosts=hosts['user_hosts'])
 		print('Step One: Complete...')
 		execute(clone_repository, config['repo'], deployment_dir, hosts=hosts['user_hosts'])
 		print('Step Two: Clone project into new folder...')
